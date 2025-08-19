@@ -1,18 +1,25 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import Header from './components/ui/Header'
 import NavigationBar from './components/ui/NavigationBar'
 
 export default function App() {
   const location = useLocation()
-  const isHomePage = location.pathname === '/'
+  const pathname = location.pathname
+  const isHome = pathname === '/'
+  const isRegister = pathname.startsWith('/register')
+  const isLogin = pathname.startsWith('/login')
+  const isDashboard = pathname.startsWith('/dashboard')
+
+  const showHeader = !(isHome || isRegister || isLogin || isDashboard)
+  const showFooter = !(isHome || isRegister)
   
   return (
     <div className="min-h-screen flex flex-col">
-      {!isHomePage && <Header />}
-      <div className={`flex-1 ${!isHomePage ? 'container mx-auto p-4' : ''}`}>
+      {showHeader && <Header />}
+      <div className={`flex-1 ${showHeader ? 'container mx-auto p-4' : ''}`}>
         <Outlet />
       </div>
-      {!isHomePage && <NavigationBar activePath={location.pathname} />}
+      {showFooter && <NavigationBar activePath={pathname} />}
     </div>
   )
 }

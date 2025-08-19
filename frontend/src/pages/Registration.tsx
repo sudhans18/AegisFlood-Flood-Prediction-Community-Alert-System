@@ -4,21 +4,23 @@ import Input from '../components/shared/Input'
 import Button from '../components/shared/Button'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useI18n } from '../context/I18nContext'
 
 type RegistrationData = {
   location: string
   phone: string
-  language: string
+  language: 'en' | 'hi' | 'as' | 'ta'
   alerts: {
     sms: boolean
     whatsapp: boolean
-    email: boolean
   }
 }
 
 export default function Registration() {
   const { login } = useAuth()
+  const navigate = useNavigate()
+  const { setLanguage, t } = useI18n()
   const [currentStep, setCurrentStep] = useState(1)
   const [registrationData, setRegistrationData] = useState<RegistrationData>({
     location: '',
@@ -26,8 +28,7 @@ export default function Registration() {
     language: 'en',
     alerts: {
       sms: true,
-      whatsapp: false,
-      email: false
+      whatsapp: false
     }
   })
   const [otp, setOtp] = useState('')
@@ -36,21 +37,14 @@ export default function Registration() {
   const [loading, setLoading] = useState(false)
 
   const steps = [
-    { id: 1, title: 'Location', icon: '📍' },
-    { id: 2, title: 'Phone', icon: '📱' },
-    { id: 3, title: 'Language', icon: '🌐' },
+    { id: 1, title: 'Location', icon: '\ud83d\udccd' },
+    { id: 2, title: 'Phone', icon: '\ud83d\udcf1' },
+    { id: 3, title: 'Language', icon: '\ud83c\udf10' },
     { id: 4, title: 'Alerts', icon: '🔔' }
   ]
 
   const updateData = (field: keyof RegistrationData, value: any) => {
     setRegistrationData(prev => ({ ...prev, [field]: value }))
-  }
-
-  const updateAlerts = (type: keyof RegistrationData['alerts'], value: boolean) => {
-    setRegistrationData(prev => ({
-      ...prev,
-      alerts: { ...prev.alerts, [type]: value }
-    }))
   }
 
   const sendOTP = async () => {
@@ -59,7 +53,7 @@ export default function Registration() {
     try {
       await api.post('/auth/register', { 
         phone_number: registrationData.phone,
-        location: registrationData.location,
+        location: registrationData.location, // Send as location field
         language: registrationData.language
       })
       setOtpSent(true)
@@ -78,8 +72,10 @@ export default function Registration() {
         phone_number: registrationData.phone, 
         otp 
       })
+      // Save auth, but continue to Step 3 and Step 4 before redirecting
       login(res.data.access_token, res.data.role)
-      setMessage('Registered successfully!')
+      setMessage('Phone verified successfully')
+      setCurrentStep(3)
     } catch (error) {
       setMessage('Invalid OTP. Please try again.')
     }
@@ -87,16 +83,13 @@ export default function Registration() {
   }
 
   const nextStep = () => {
-    if (currentStep < 4) {
-      setCurrentStep(currentStep + 1)
-    }
+    if (currentStep < 4) setCurrentStep(currentStep + 1)
+  }
+  const prevStep = () => {
+    if (currentStep > 1) setCurrentStep(currentStep - 1)
   }
 
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-    }
-  }
+  const canComplete = registrationData.alerts.sms || registrationData.alerts.whatsapp
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -105,31 +98,15 @@ export default function Registration() {
           <div className="space-y-4">
             <div className="text-center">
               <div className="text-2xl mb-2">📍</div>
-              <h2 className="text-lg font-semibold">Enter Your Location</h2>
-              <p className="text-sm text-gray-600 mt-2">
-                We'll use this to provide accurate flood risk information for your area.
-              </p>
+              <h2 className="text-lg font-semibold">Choose Location</h2>
+              <p className="text-sm text-gray-600 mt-2">Select your area to get accurate flood risk information and alerts.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location (City, District, State)
-              </label>
-              <Input 
-                placeholder="e.g., Guwahati, Kamrup, Assam"
-                value={registrationData.location}
-                onChange={e => updateData('location', e.target.value)}
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                Enter your complete address including city, district, and state for accurate flood risk monitoring.
-              </p>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Location (City, District, State)</label>
+              <Input placeholder="e.g., Guwahati, Kamrup, Assam" value={registrationData.location} onChange={e => updateData('location', e.target.value)} />
+              <p className="text-xs text-gray-500 mt-2">Enter your complete address including city, district, and state.</p>
             </div>
-            <Button 
-              onClick={nextStep} 
-              disabled={!registrationData.location.trim()}
-              className="w-full"
-            >
-              Next →
-            </Button>
+            <Button onClick={nextStep} disabled={!registrationData.location.trim()} className="w-full">Next →</Button>
           </div>
         )
 
@@ -139,64 +116,30 @@ export default function Registration() {
             <div className="text-center">
               <div className="text-2xl mb-2">📱</div>
               <h2 className="text-lg font-semibold">Phone Verification</h2>
-              <p className="text-sm text-gray-600 mt-2">
-                We'll send you a verification code to confirm your phone number.
-              </p>
+              <p className="text-sm text-gray-600 mt-2">We'll send a verification code to confirm your phone number.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number
-              </label>
-              <Input 
+              <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+              <Input
                 placeholder="+91 98765 43210"
                 value={registrationData.phone}
                 onChange={e => updateData('phone', e.target.value)}
-                disabled={otpSent}
+                className={otpSent ? "opacity-60 pointer-events-none" : ""}
               />
             </div>
             {!otpSent ? (
               <div className="space-y-3">
-                <Button 
-                  onClick={sendOTP} 
-                  disabled={!registrationData.phone.trim() || loading}
-                  className="w-full"
-                >
-                  {loading ? 'Sending...' : 'Send OTP'}
-                </Button>
-                <Button 
-                  onClick={prevStep} 
-                  variant="secondary"
-                  className="w-full"
-                >
-                  ← Back
-                </Button>
+                <Button onClick={sendOTP} disabled={!registrationData.phone.trim() || loading} className="w-full">{loading ? 'Sending...' : 'Send OTP'}</Button>
+                <Button onClick={prevStep} variant="secondary" className="w-full">← Back</Button>
               </div>
             ) : (
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Enter OTP
-                  </label>
-                  <Input 
-                    placeholder="0000"
-                    value={otp}
-                    onChange={e => setOtp(e.target.value)}
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Enter OTP</label>
+                  <Input placeholder="0000" value={otp} onChange={e => setOtp(e.target.value)} />
                 </div>
-                <Button 
-                  onClick={verifyOTP} 
-                  disabled={!otp.trim() || loading}
-                  className="w-full"
-                >
-                  {loading ? 'Verifying...' : 'Verify OTP'}
-                </Button>
-                <Button 
-                  onClick={() => setOtpSent(false)} 
-                  variant="secondary"
-                  className="w-full"
-                >
-                  Resend OTP
-                </Button>
+                <Button onClick={verifyOTP} disabled={!otp.trim() || loading} className="w-full">{loading ? 'Verifying...' : 'Verify OTP'}</Button>
+                <Button onClick={() => setOtpSent(false)} variant="secondary" className="w-full">Resend OTP</Button>
               </div>
             )}
           </div>
@@ -207,40 +150,29 @@ export default function Registration() {
           <div className="space-y-4">
             <div className="text-center">
               <div className="text-2xl mb-2">🌐</div>
-              <h2 className="text-lg font-semibold">Language Preference</h2>
-              <p className="text-sm text-gray-600 mt-2">
-                Choose your preferred language for alerts and notifications.
-              </p>
+              <h2 className="text-lg font-semibold">Choose Language</h2>
+              <p className="text-sm text-gray-600 mt-2">Select your preferred language for alerts and interface.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Language
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Language</label>
               <select 
                 value={registrationData.language}
-                onChange={e => updateData('language', e.target.value)}
+                onChange={e => {
+                  const lang = e.target.value as RegistrationData['language']
+                  updateData('language', lang)
+                  setLanguage(lang)
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="en">English</option>
                 <option value="hi">Hindi</option>
-                <option value="bn">Bengali</option>
                 <option value="as">Assamese</option>
+                <option value="ta">Tamil</option>
               </select>
             </div>
             <div className="flex space-x-3">
-              <Button 
-                onClick={prevStep} 
-                variant="secondary"
-                className="flex-1"
-              >
-                ← Back
-              </Button>
-              <Button 
-                onClick={nextStep} 
-                className="flex-1"
-              >
-                Next →
-              </Button>
+              <Button onClick={prevStep} variant="secondary" className="flex-1">← Back</Button>
+              <Button onClick={nextStep} className="flex-1">Next →</Button>
             </div>
           </div>
         )
@@ -250,55 +182,23 @@ export default function Registration() {
           <div className="space-y-4">
             <div className="text-center">
               <div className="text-2xl mb-2">🔔</div>
-              <h2 className="text-lg font-semibold">Alert Preferences</h2>
-              <p className="text-sm text-gray-600 mt-2">
-                Choose how you'd like to receive flood alerts and notifications.
-              </p>
+              <h2 className="text-lg font-semibold">{t('reg.alertPrefs')}</h2>
+              <p className="text-sm text-gray-600 mt-2">{t('reg.alertPrefsDesc')}</p>
             </div>
             <div className="space-y-3">
               <label className="flex items-center space-x-3">
-                <input 
-                  type="checkbox"
-                  checked={registrationData.alerts.sms}
-                  onChange={e => updateAlerts('sms', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <span className="text-sm">SMS Alerts</span>
+                <input type="checkbox" checked={registrationData.alerts.sms} onChange={e => updateData('alerts', { ...registrationData.alerts, sms: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+                <span className="text-sm">{t('reg.smsAlerts')}</span>
               </label>
               <label className="flex items-center space-x-3">
-                <input 
-                  type="checkbox"
-                  checked={registrationData.alerts.whatsapp}
-                  onChange={e => updateAlerts('whatsapp', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <span className="text-sm">WhatsApp Alerts</span>
+                <input type="checkbox" checked={registrationData.alerts.whatsapp} onChange={e => updateData('alerts', { ...registrationData.alerts, whatsapp: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+                <span className="text-sm">{t('reg.whatsappAlerts')}</span>
               </label>
-              <label className="flex items-center space-x-3">
-                <input 
-                  type="checkbox"
-                  checked={registrationData.alerts.email}
-                  onChange={e => updateAlerts('email', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <span className="text-sm">Email Alerts</span>
-              </label>
+              <p className="text-xs text-gray-500">{t('reg.selectOne')}</p>
             </div>
             <div className="flex space-x-3">
-              <Button 
-                onClick={prevStep} 
-                variant="secondary"
-                className="flex-1"
-              >
-                ← Back
-              </Button>
-              <Button 
-                onClick={sendOTP} 
-                disabled={loading}
-                className="flex-1"
-              >
-                {loading ? 'Processing...' : 'Complete Registration'}
-              </Button>
+              <Button onClick={prevStep} variant="secondary" className="flex-1">← Back</Button>
+              <Button onClick={() => navigate('/dashboard', { replace: true })} disabled={!canComplete} className="flex-1">Complete Setup</Button>
             </div>
           </div>
         )
@@ -310,20 +210,14 @@ export default function Registration() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      {/* Header */}
       <div className="max-w-md mx-auto px-4 mb-6">
         <div className="flex items-center justify-between">
-          <Link to="/" className="text-blue-600 hover:text-blue-800">
-            ← Back
-          </Link>
+          <Link to="/" className="text-blue-600 hover:text-blue-800">← Back</Link>
           <h1 className="text-lg font-semibold">Registration</h1>
-          <Link to="/" className="text-blue-600 hover:text-blue-800">
-            Home
-          </Link>
+          <Link to="/" className="text-blue-600 hover:text-blue-800">Home</Link>
         </div>
       </div>
 
-      {/* Progress Indicator */}
       <div className="max-w-md mx-auto px-4 mb-6">
         <div className="text-center mb-4">
           <p className="text-sm text-gray-600">Step {currentStep} of 4</p>
@@ -331,33 +225,22 @@ export default function Registration() {
         <div className="flex items-center justify-between">
           {steps.map((step, index) => (
             <div key={step.id} className="flex items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                step.id <= currentStep 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-500'
-              }`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${step.id <= currentStep ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
                 {step.id < currentStep ? '✓' : step.icon}
               </div>
               {index < steps.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-2 ${
-                  step.id < currentStep ? 'bg-blue-600' : 'bg-gray-200'
-                }`} />
+                <div className={`flex-1 h-0.5 mx-2 ${step.id < currentStep ? 'bg-blue-600' : 'bg-gray-200'}`} />
               )}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Registration Form */}
       <div className="max-w-md mx-auto px-4">
         <Card className="p-6">
           {renderStepContent()}
           {message && (
-            <div className={`mt-4 p-3 rounded-md text-sm ${
-              message.includes('Error') || message.includes('Invalid')
-                ? 'bg-red-100 text-red-700'
-                : 'bg-green-100 text-green-700'
-            }`}>
+            <div className={`mt-4 p-3 rounded-md text-sm ${message.includes('Error') || message.includes('Invalid') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
               {message}
             </div>
           )}

@@ -64,10 +64,9 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
             language=req.language or "en",
             role="citizen",
         )
-        # Store point as 'POINT(lon lat)'
-        if req.longitude is not None and req.latitude is not None:
-            point_wkt = f"POINT({req.longitude} {req.latitude})"
-            setattr(user, "location", point_wkt)
+        # For MVP, store location as name if no coordinates provided
+        if req.location and not req.name:
+            user.name = req.location
         db.add(user)
         db.commit()
     # For MVP we mock OTP sending

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Boolean, JSON
+from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Boolean, JSON, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from geoalchemy2 import Geography
@@ -16,6 +16,8 @@ class User(Base):
     location = Column(Geography(geometry_type='POINT', srid=4326), nullable=True)
     language = Column(String(10), nullable=False, default='en')
     role = Column(String(20), nullable=False, default='citizen')  # citizen, authority
+    sms_alerts = Column(Boolean, nullable=False, default=True)
+    whatsapp_alerts = Column(Boolean, nullable=False, default=False)
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
@@ -45,6 +47,17 @@ class FloodPrediction(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     region = relationship("Region", back_populates="predictions")
+
+
+class Alert(Base):
+    __tablename__ = "alerts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    region = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)
+    risk_level = Column(String(20), nullable=False)  # low, medium, high, critical
+    created_by = Column(String(100), nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
 
 class AlertHistory(Base):

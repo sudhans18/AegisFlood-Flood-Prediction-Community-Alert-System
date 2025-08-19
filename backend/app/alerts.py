@@ -1,61 +1,90 @@
 import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from twilio.rest import Client
-
+from typing import List
 from .database import get_db
-from .models import AlertHistory, User, Region
-from .schemas import AlertRequest
-from .auth import require_role
+from .models import Alert, User
+from .schemas import AlertCreate, AlertResponse
+from .auth import get_current_user
+from .services.sms_service import sms_service, whatsapp_service
+import logging
 
-
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
-
-def get_twilio_client():
-    if os.getenv("TWILIO_MOCK", "true").lower() == "true":
-        return None
-    return Client(os.getenv('TWILIO_ACCOUNT_SID'), os.getenv('TWILIO_AUTH_TOKEN'))
-
-
-@router.get("/history")
-def alert_history(db: Session = Depends(get_db)):
-    items = db.query(AlertHistory).order_by(AlertHistory.sent_at.desc()).limit(100).all()
-    return items
-
-
-@router.post("/send")
-def send_alert(alert: AlertRequest, db: Session = Depends(get_db), user=Depends(require_role("authority"))):
-    region = db.query(Region).filter(Region.id == alert.region_id).one_or_none()
-    if region is None:
-        raise HTTPException(status_code=404, detail="Region not found")
-
-    users = db.query(User).filter(User.is_active == True).all()
-    sent_count = 0
-
-    twilio_client = get_twilio_client()
-    from_number = os.getenv('TWILIO_PHONE_NUMBER')
-    message_body = f"\u26a0\ufe0f Flood Alert ({alert.risk_level.upper()}):\n{alert.message}\n- AegisFlood"
-
-    for u in users:
-        try:
-            if twilio_client and from_number:
-                twilio_client.messages.create(body=message_body, from_=from_number, to=u.phone_number)
-            sent_count += 1
-        except Exception:
-            continue
-
-    log = AlertHistory(
-        region_id=alert.region_id,
-        message=alert.message,
-        risk_level=alert.risk_level,
-        sent_to_count=sent_count,
-        created_by=user.get("phone_number", "admin"),
-    )
-    db.add(log)
+@router.post("/alerts/", response_model=AlertResponse)
+def create_alert(alert: AlertCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Create a new alert and send notifications to users"""
+    if current_user.role != "authority":
+        raise HTTPException(status_code=403, detail="Only authorities can create alerts")
+    
+    # Create alert in database
+    db_alert = Alert(**alert.dict())
+    db.add(db_alert)
     db.commit()
+    db.refresh(db_alert)
+    
+    # Get all users in the affected region
+    users = db.query(User).filter(User.location.contains(alert.region)).all()
+    
+    # Send notifications based on user preferences
+    for user in users:
+        try:
+            message = f"FLOOD ALERT: {alert.message} - Risk Level: {alert.risk_level}"
+            
+            # Send SMS if user has opted in
+            if user.sms_alerts:
+                sms_service.send_sms(user.phone_number, message)
+            
+            # Send WhatsApp if user has opted in
+            if user.whatsapp_alerts:
+                whatsapp_service.send_whatsapp(user.phone_number, message)
+                
+        except Exception as e:
+            logger.error(f"Failed to send alert to user {user.id}: {e}")
+    
+    return db_alert
 
-    return {"sent_count": sent_count, "total_users": len(users)}
+@router.get("/alerts/", response_model=List[AlertResponse])
+def get_alerts(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Get all alerts for the current user's region"""
+    alerts = db.query(Alert).filter(Alert.region.contains(current_user.location)).all()
+    return alerts
+
+@router.post("/alerts/{alert_id}/confirm")
+def confirm_alert(alert_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Mark an alert as confirmed by the user"""
+    alert = db.query(Alert).filter(Alert.id == alert_id).first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    
+    # In a real implementation, you might want to track confirmations
+    # For now, we'll just return success
+    return {"message": "Alert confirmed successfully"}
+
+@router.post("/alerts/test-sms")
+def test_sms(phone_number: str, message: str = "Test SMS from AegisFlood", current_user: User = Depends(get_current_user)):
+    """Test SMS functionality (for development)"""
+    if current_user.role != "authority":
+        raise HTTPException(status_code=403, detail="Only authorities can test SMS")
+    
+    success = sms_service.send_sms(phone_number, message)
+    if success:
+        return {"message": "Test SMS sent successfully"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send test SMS")
+
+@router.post("/alerts/test-whatsapp")
+def test_whatsapp(phone_number: str, message: str = "Test WhatsApp from AegisFlood", current_user: User = Depends(get_current_user)):
+    """Test WhatsApp functionality (for development)"""
+    if current_user.role != "authority":
+        raise HTTPException(status_code=403, detail="Only authorities can test WhatsApp")
+    
+    success = whatsapp_service.send_whatsapp(phone_number, message)
+    if success:
+        return {"message": "Test WhatsApp sent successfully"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send test WhatsApp")
 
 
 

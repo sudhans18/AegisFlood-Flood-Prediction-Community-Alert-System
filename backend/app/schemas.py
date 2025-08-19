@@ -10,8 +10,9 @@ class RegisterRequest(BaseModel):
     phone_number: PhoneNumberStr
     name: Optional[str] = None
     language: Optional[str] = Field(default="en", pattern=r"^[a-z]{2}(-[A-Z]{2})?$")
-    latitude: Optional[float] = Field(default=None, ge=-90, le=90)
-    longitude: Optional[float] = Field(default=None, ge=-180, le=180)
+    location: Optional[str] = None
+    sms_alerts: Optional[bool] = True
+    whatsapp_alerts: Optional[bool] = False
 
 
 class VerifyRequest(BaseModel):
@@ -36,6 +37,24 @@ class PredictionResponse(BaseModel):
     risk_score: conint(ge=0, le=100)
     factors: Dict[str, float | str]
     valid_until: date
+
+
+class AlertCreate(BaseModel):
+    region: str
+    message: constr(min_length=1, max_length=500)
+    risk_level: str = Field(..., pattern=r"^(low|medium|high|critical)$")
+
+
+class AlertResponse(BaseModel):
+    id: int
+    region: str
+    message: str
+    risk_level: str
+    created_by: Optional[str]
+    created_at: str
+
+    class Config:
+        from_attributes = True
 
 
 class AlertRequest(BaseModel):
