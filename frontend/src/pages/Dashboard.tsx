@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useI18n } from '../context/I18nContext'
 import { useNavigate } from 'react-router-dom'
@@ -42,6 +42,8 @@ export default function Dashboard() {
   const { role } = useAuth()
   const { t } = useI18n()
   const navigate = useNavigate()
+  const mapRef = useRef<HTMLDivElement>(null)
+  const mapInstanceRef = useRef<any>(null)
   const [activeTab, setActiveTab] = useState('overview')
   const [isLoading, setIsLoading] = useState(true)
   const [weatherData, setWeatherData] = useState<WeatherData>({
@@ -108,6 +110,127 @@ export default function Dashboard() {
       return () => clearInterval(interval)
     }
   }, [autoRefresh])
+
+  // Initialize map when component mounts
+  useEffect(() => {
+    if (mapRef.current && !mapInstanceRef.current) {
+      // Load Leaflet dynamically
+      const loadLeaflet = async () => {
+        // Load Leaflet CSS
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+        document.head.appendChild(link)
+
+        // Load Leaflet JS
+        const script = document.createElement('script')
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+        script.onload = () => {
+          // @ts-ignore
+          const L = (window as any).L
+          if (L && mapRef.current) {
+            // Initialize map
+            const map = L.map(mapRef.current).setView([25.96, 85.19], 7)
+            mapInstanceRef.current = map
+
+            // Base layers
+            const Map1 = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}{r}.{ext}', {
+              minZoom: 0,
+              maxZoom: 20,
+              ext: 'jpg',
+              attribution: '&copy; CNES, Airbus DS, PlanetObserver | &copy; <a href="https://stadiamaps.com/">Stadia Maps</a>'
+            })
+            
+            const Map2 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              maxZoom: 19,
+              attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+            })
+            
+            const Map3 = L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.{ext}', {
+              minZoom: 0,
+              maxZoom: 20,
+              ext: 'png',
+              attribution: '&copy; Stadia Maps &copy; OpenMapTiles &copy; OpenStreetMap contributors'
+            })
+            
+            const Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { 
+              attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community' 
+            })
+
+            Map2.addTo(map) // default base layer
+
+            // Marker Example
+            const fm = L.marker([25.718957327625148, 86.19844661163431]).bindPopup(
+              "<div style='text-align: center; padding: 5px;'><strong>📍 Bihar</strong><br><small>Central Location</small></div>"
+            ).addTo(map)
+
+            const baseMaps = {
+              "🌊 Flood Risk": Map1,
+              "☔ Rainfall": Map2,
+              "🌊 River Level": Map3,
+              "🌍 Incidents": Esri_WorldImagery
+            }
+
+            const overlayMaps = {
+              "📡 Monitoring Stations": fm
+            }
+
+            // Add layer control
+            L.control.layers(baseMaps, overlayMaps, {collapsed: false, position: 'topleft'}).addTo(map)
+
+            // Load GeoJSON data
+            fetch('/bihar.geojson')
+              .then(res => res.json())
+              .then(data => {
+                const geojsonLayer = L.geoJSON(data, {
+                  style: function (feature: any) {
+                    const randomRisk = Math.floor(Math.random() * 3)
+                    const riskColors = ["#27ae60", "#f39c12", "#e74c3c"] // green, yellow, red
+                    return {
+                      color: riskColors[randomRisk],
+                      weight: 2,
+                      fillColor: riskColors[randomRisk],
+                      fillOpacity: 0.6
+                    }
+                  },
+                  onEachFeature: function (feature: any, layer: any) {
+                    if (feature.properties && feature.properties.DISTRICT) {
+                      const riskLevels = ["Low", "Medium", "High"]
+                      const riskIcons = ["🟢", "🟠", "🔴"]
+                      const riskIndex = Math.floor(Math.random() * 3)
+                      const riskLevel = riskLevels[riskIndex]
+                      const riskIcon = riskIcons[riskIndex]
+                      layer.bindPopup(`
+                        <div style='text-align: center; padding: 8px; font-family: Inter, sans-serif;'>
+                          <strong style='font-size: 16px; color: #1f2937;'>${feature.properties.DISTRICT}</strong><br>
+                          <div style='margin: 8px 0; padding: 4px 8px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; font-size: 14px;'>
+                            ${riskIcon} <strong>${riskLevel} Risk</strong>
+                          </div>
+                          <small style='color: #6b7280;'>Bihar District</small>
+                        </div>
+                      `)
+                    }
+                  }
+                }).addTo(map)
+
+                map.fitBounds(geojsonLayer.getBounds())
+              })
+              .catch(err => console.error("Failed to load GeoJSON", err))
+          }
+        }
+        document.head.appendChild(script)
+      }
+
+      loadLeaflet()
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove()
+        mapInstanceRef.current = null
+      }
+    }
+  }, [])
 
   const getRiskColor = (level: string) => {
     switch (level) {
@@ -185,6 +308,58 @@ export default function Dashboard() {
 
   return (
     <div className="h-screen bg-gradient-to-br from-violet-50 via-cyan-50 to-emerald-50 overflow-hidden flex flex-col relative">
+      <style>
+        {`
+          .leaflet-control-layers {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px) !important;
+            border-radius: 12px !important;
+            border: 2px solid #e1e8ed !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1) !important;
+            padding: 15px !important;
+            min-width: 200px !important;
+          }
+          .leaflet-control-layers-toggle {
+            background: linear-gradient(145deg, #2c5aa0, #1e3d6f) !important;
+            border-radius: 8px !important;
+            width: 40px !important;
+            height: 40px !important;
+          }
+          .leaflet-control-zoom {
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            overflow: visible !important;
+            background: transparent !important;
+          }
+          .leaflet-control-zoom a {
+            background: #ffffff !important;
+            color: #666 !important;
+            border: none !important;
+            font-size: 16px !important;
+            font-weight: 400 !important;
+            width: 48px !important;
+            height: 48px !important;
+            line-height: 48px !important;
+            text-align: center !important;
+            transition: all 0.2s ease !important;
+            text-decoration: none !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+            margin-bottom: 6px !important;
+            position: relative !important;
+          }
+          .leaflet-control-zoom a:hover {
+            background: #f8f9fa !important;
+            color: #333 !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+          }
+        `}
+      </style>
       <Header />
       {/* Weather Widget Row (Static with Glow on Hover) */}
       <div className="flex justify-between items-center gap-2 mb-2">
@@ -261,18 +436,14 @@ export default function Dashboard() {
                 </div>
                 {/* Map Content Area */}
                 <div className="flex-1 p-2 relative">
-                  <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg border-2 border-dashed border-blue-300 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-3xl mb-2">🗺️</div>
-                      <h4 className="text-sm font-semibold text-slate-700 mb-1">{t('dash.mapReadyForML')}</h4>
-                      <p className="text-xs text-slate-600 max-w-xs">
-                        {t('dash.mapDescription')}
-                      </p>
-                    </div>
-                  </div>
+                  <div 
+                    ref={mapRef} 
+                    className="w-full h-full rounded-lg border border-slate-200"
+                    style={{ minHeight: '400px' }}
+                  />
                   {/* Bottom Indicators */}
-                  <div className="absolute bottom-2 left-2 text-xs text-slate-500">{t('dash.timeFrame')}: {t('dash.current')}</div>
-                  <div className="absolute bottom-2 right-2 text-xs text-slate-500">{t('dash.showing')}: {t('dash.current')}</div>
+                  <div className="absolute bottom-2 left-2 text-xs text-slate-500 bg-white/80 px-2 py-1 rounded">{t('dash.timeFrame')}: {t('dash.current')}</div>
+                  <div className="absolute bottom-2 right-2 text-xs text-slate-500 bg-white/80 px-2 py-1 rounded">{t('dash.showing')}: {t('dash.current')}</div>
                 </div>
               </div>
             </div>

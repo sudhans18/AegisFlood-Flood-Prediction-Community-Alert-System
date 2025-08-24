@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bihar Flood Prediction Map</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
+
+    /* Enhanced Title Card */
+    .map-title {
+      display: none;
+    }
+
+    .title-icon {
+      font-size: 24px;
+      filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
+    }
+
+    /* Enhanced Layer Control Container */
+    .layer-control-container {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 1000;
+    }
+
+    /* Custom Layer Control Styling */
+    .custom-layer-control {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      width: 240px;
+      margin-bottom: 16px;
+    }
+
+    .layer-control-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .layer-section {
+      margin-bottom: 16px;
+    }
+
+    .layer-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .layer-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .layer-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .layer-option:hover {
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .layer-option input[type="radio"],
+    .layer-option input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #3b82f6;
+      cursor: pointer;
+    }
+
+    .layer-option label {
+      font-size: 14px;
+      color: #374151;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    /* Enhanced Legend */
+    .legend {
+      background: rgba(255, 255, 255, 0.95) !important;
+      backdrop-filter: blur(10px) !important;
+      border-radius: 12px !important;
+      border: 2px solid #e1e8ed !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1) !important;
+      padding: 15px !important;
+      font-size: 14px !important;
+      line-height: 1.6 !important;
+      color: #2c3e50 !important;
+      width: 300px !important;
+    }
+
+    .legend-title {
+      font-size: 16px !important;
+      font-weight: 600 !important;
+      margin: 0 0 10px 0 !important;
+      color: #2c5aa0 !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      border-bottom: 2px solid #e1e8ed !important;
+      padding-bottom: 8px !important;
+    }
+
+    .legend-item { 
+      display: flex !important; 
+      align-items: center !important; 
+      margin-bottom: 8px !important;
+      padding: 4px 0 !important;
+    }
+
+    .legend-swatch { 
+      width: 20px !important;
+      height: 20px !important;
+      border-radius: 50% !important;
+      margin-right: 12px !important;
+      border: 2px solid white !important;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+    }
+
+    .legend-label {
+      font-weight: 500 !important;
+      color: #2c3e50 !important;
+    }
+
+    /* Enhanced Layer Control Styling - Replacing Custom Controls */
+    .leaflet-control-layers {
+      display: block !important;
+      background: rgba(255, 255, 255, 0.95) !important;
+      backdrop-filter: blur(10px) !important;
+      border-radius: 12px !important;
+      border: 2px solid #e1e8ed !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1) !important;
+      padding: 15px !important;
+      min-width: 200px !important;
+      margin-left: 10px !important;
+      left: 10px !important;
+      right: auto !important;
+    }
+
+    .leaflet-control-layers-toggle {
+      background: linear-gradient(145deg, #2c5aa0, #1e3d6f) !important;
+      border-radius: 8px !important;
+      width: 40px !important;
+      height: 40px !important;
+    }
+
+    .leaflet-control-layers-toggle:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3) !important;
+    }
+
+    .leaflet-control-layers-list {
+      margin-top: 10px !important;
+    }
+
+    .leaflet-control-layers label {
+      font-weight: 500 !important;
+      color: #2c3e50 !important;
+      margin-bottom: 8px !important;
+      display: flex !important;
+      align-items: center !important;
+      padding: 5px 0 !important;
+    }
+
+    .leaflet-control-layers input[type="radio"],
+    .leaflet-control-layers input[type="checkbox"] {
+      margin-right: 10px !important;
+      transform: scale(1.2) !important;
+    }
+
+    /* Hide custom layer control */
+    .custom-layer-control {
+      display: none;
+    }
+
+    /* Enhanced zoom controls */
+    .leaflet-control-zoom {
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      overflow: visible !important;
+      margin-left: 15px !important;
+      background: transparent !important;
+    }
+
+    .leaflet-control-zoom a {
+      background: #ffffff !important;
+      color: #666 !important;
+      border: none !important;
+      font-size: 16px !important;
+      font-weight: 400 !important;
+      width: 48px !important;
+      height: 48px !important;
+      line-height: 48px !important;
+      text-align: center !important;
+      transition: all 0.2s ease !important;
+      text-decoration: none !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 8px !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+      margin-bottom: 6px !important;
+      position: relative !important;
+    }
+
+    .leaflet-control-zoom-in {
+      border-bottom: none !important;
+    }
+
+    .leaflet-control-zoom a:hover {
+      background: #f8f9fa !important;
+      color: #333 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }
+
+    .leaflet-control-zoom a:active {
+      transform: translateY(0px) !important;
+      transition: all 0.1s !important;
+    }
+
+    .leaflet-control-zoom a:first-child {
+      border-radius: 8px !important;
+      margin-bottom: 6px !important;
+    }
+
+    .leaflet-control-zoom a:last-child {
+      border-radius: 8px !important;
+      margin-bottom: 0 !important;
+    }
+
+    /* Clean zoom button icons */
+    .leaflet-control-zoom-in {
+      position: relative;
+    }
+
+    .leaflet-control-zoom-in::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 18px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3Cline x1='9' y1='11' x2='13' y2='11'/%3E%3Cline x1='11' y1='9' x2='11' y2='13'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+    }
+
+    .leaflet-control-zoom-in::after {
+      display: none;
+    }
+
+    .leaflet-control-zoom-out::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 18px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3Cline x1='9' y1='11' x2='13' y2='11'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+    }
+
+    .leaflet-control-zoom-out::after {
+      display: none;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .map-title {
+        font-size: 16px;
+        padding: 12px 20px;
+        min-width: 240px;
+      }
+      
+      .layer-control-container {
+        left: 10px;
+        bottom: 20px;
+      }
+      
+      .custom-layer-control,
+      .legend {
+        width: 200px;
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layer-control-container">
+    <div class="legend">
+      <div class="legend-title">
+        🌊 Flood Risk Levels
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch" style="background:#27ae60"></span>
+        <span class="legend-label">Low Risk - Normal conditions</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch" style="background:#f39c12"></span>
+        <span class="legend-label">Medium Risk - Monitor closely</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch" style="background:#e74c3c"></span>
+        <span class="legend-label">High Risk - Alert condition</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // Initialize map
+    var map = L.map('map').setView([25.96, 85.19], 7);
+
+    // Base layers
+    var Map1 = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}{r}.{ext}', {
+      minZoom: 0,
+      maxZoom: 20,
+      ext: 'jpg',
+      attribution: '&copy; CNES, Airbus DS, PlanetObserver | &copy; <a href="https://stadiamaps.com/">Stadia Maps</a>'
+    });
+    
+    var Map2 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+    });
+    
+    var Map3 = L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.{ext}', {
+      minZoom: 0,
+      maxZoom: 20,
+      ext: 'png',
+      attribution: '&copy; Stadia Maps &copy; OpenMapTiles &copy; OpenStreetMap contributors'
+    });
+    
+    var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { 
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community' 
+    });
+
+    Map2.addTo(map); // default base layer
+
+    // Marker Example
+    var fm = L.marker([25.718957327625148, 86.19844661163431]).bindPopup(
+      "<div style='text-align: center; padding: 5px;'><strong>📍 Bihar</strong><br><small>Central Location</small></div>"
+    ).addTo(map);
+
+    var baseMaps = {
+      "🌊 Flood Risk": Map1,
+      "☔ Rainfall": Map2,
+      "🌊 River Level": Map3,
+      "🌍 Incidents": Esri_WorldImagery
+    };
+
+    var overlayMaps = {
+      "📡 Monitoring Stations": fm
+    };
+
+    // Add layer control with your friend's styling
+    L.control.layers(baseMaps, overlayMaps, {collapsed: false, position: 'topleft'}).addTo(map);
+
+    // Remove custom layer control functionality since we're using native Leaflet control now
+
+    // Colors for polygons
+    var colors = ["#22c55e", "#facc15", "#ef4444"]; // green, yellow, red
+
+    // Load external GeoJSON
+    fetch("bihar.geojson")
+      .then(res => res.json())
+      .then(data => {
+        var geojsonLayer = L.geoJSON(data, {
+          style: function (feature) {
+            const randomRisk = Math.floor(Math.random() * 3);
+            const riskColors = ["#27ae60", "#f39c12", "#e74c3c"]; // green, yellow, red (matching legend)
+            return {
+              color: riskColors[randomRisk], // border matches fill color
+              weight: 2,
+              fillColor: riskColors[randomRisk],
+              fillOpacity: 0.6
+            };
+          },
+          onEachFeature: function (feature, layer) {
+            if (feature.properties && feature.properties.DISTRICT) {
+              const riskLevels = ["Low", "Medium", "High"];
+              const riskIcons = ["🟢", "🟠", "🔴"];
+              const riskIndex = Math.floor(Math.random() * 3);
+              const riskLevel = riskLevels[riskIndex];
+              const riskIcon = riskIcons[riskIndex];
+              layer.bindPopup(`
+                <div style='text-align: center; padding: 8px; font-family: Inter, sans-serif;'>
+                  <strong style='font-size: 16px; color: #1f2937;'>${feature.properties.DISTRICT}</strong><br>
+                  <div style='margin: 8px 0; padding: 4px 8px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; font-size: 14px;'>
+                    ${riskIcon} <strong>${riskLevel} Risk</strong>
+                  </div>
+                  <small style='color: #6b7280;'>Bihar District</small>
+                </div>
+              `);
+            }
+          }
+        }).addTo(map);
+
+        map.fitBounds(geojsonLayer.getBounds());
+      })
+      .catch(err => console.error("Failed to load GeoJSON", err));
+  </script>
+</body>
+</html>
