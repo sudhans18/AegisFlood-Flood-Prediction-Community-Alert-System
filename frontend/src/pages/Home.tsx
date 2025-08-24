@@ -33,7 +33,7 @@ export default function Home() {
           {/* Main Water Drop with Flowing Effect */}
           <div className="relative mb-6">
             {/* Central Water Drop */}
-            <div className="w-32 h-32 bg-gradient-to-br from-blue-400 via-cyan-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl animate-bounce relative overflow-hidden">
+            <div className="w-32 h-32 bg-gradient-to-br from-blue-400 via-cyan-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl hover:animate-bounce transition-all duration-300 relative overflow-hidden">
               <span className="text-6xl relative z-10">🌊</span>
               {/* Internal Water Flow Animation */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 w-full h-full transform -skew-x-12 animate-slide-right"></div>
@@ -92,7 +92,7 @@ export default function Home() {
           {/* Citizens Icon */}
           <div className="text-center group animate-slide-up">
             <div 
-              className={`w-28 h-28 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl cursor-pointer transform hover:scale-110 transition-all duration-500 animate-bounce ${
+              className={`w-28 h-28 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl cursor-pointer transform hover:scale-110 transition-all duration-500 hover:animate-bounce ${
                 activeDescription === 'authorities' ? 'blur-sm opacity-50' : ''
               }`}
               onClick={() => setActiveDescription(activeDescription === 'citizens' ? null : 'citizens')}
@@ -144,7 +144,7 @@ export default function Home() {
           {/* Authorities Icon */}
           <div className="text-center group animate-slide-up" style={{animationDelay: '0.2s'}}>
             <div 
-              className={`w-28 h-28 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl cursor-pointer transform hover:scale-110 transition-all duration-500 animate-bounce ${
+              className={`w-28 h-28 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl cursor-pointer transform hover:scale-110 transition-all duration-500 hover:animate-bounce ${
                 activeDescription === 'citizens' ? 'blur-sm opacity-50' : ''
               }`}
               style={{animationDelay: '0.5s'}}

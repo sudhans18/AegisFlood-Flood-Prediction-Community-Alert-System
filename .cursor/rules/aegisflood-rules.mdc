@@ -1,0 +1,17 @@
+---
+alwaysApply: true
+---
+- Follow clean code principles: readability > cleverness.
+- All code must be documented with meaningful docstrings (Google-style).
+- Use consistent naming: snake_case (Python), camelCase (JS vars), PascalCase (React components)."
+- Never hardcode credentials, API keys, or secrets (use env variables).
+- Write unit tests for all core logic (pytest for Python, Jest for React).
+- Ensure all user input is validated and sanitized.
+- Prefer modular and reusable components/functions.
+- Never log sensitive data (phone numbers, tokens).
+- Use HTTPS in all deployments.
+- JWT tokens must be signed and expire in <24h.
+- Rate limit APIs (100 req/min for public, 300 req/min for authed).
+- Apply OWASP security best practices.
+- All secrets must come from env variables (dotenv for local).
+- Follow least-privilege for DB and cloud access.

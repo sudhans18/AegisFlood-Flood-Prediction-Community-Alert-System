@@ -58,14 +58,14 @@ export default function Dashboard() {
     {
       id: '1',
       type: 'warning',
-      message: 'Heavy rainfall expected in next 3 hours',
+      message: t('msg.heavyRainfallExpected'),
       timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       isRead: false
     },
     {
       id: '2',
       type: 'info',
-      message: 'Water level monitoring station back online',
+      message: t('msg.waterLevelMonitoring'),
       timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
       isRead: true
     }
@@ -169,12 +169,12 @@ export default function Dashboard() {
             <div className="w-20 h-20 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin mx-auto mb-6"></div>
             <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-cyan-500 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
           </div>
-          <h2 className="text-2xl font-bold text-violet-700 mb-2">🌊 Loading Flood Monitor...</h2>
-          <p className="text-cyan-600 text-lg">Preparing your comprehensive dashboard</p>
+          <h2 className="text-2xl font-bold text-violet-700 mb-2">🌊 {t('dash.loadingFloodMonitor')}</h2>
+          <p className="text-cyan-600 text-lg">{t('dash.preparingDashboard')}</p>
           <div className="mt-4 flex justify-center space-x-2">
-            <div className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-            <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-2 h-2 bg-violet-400 rounded-full hover:animate-bounce transition-all duration-300" style={{ animationDelay: '0s' }}></div>
+            <div className="w-2 h-2 bg-cyan-400 rounded-full hover:animate-bounce transition-all duration-300" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2 h-2 bg-emerald-400 rounded-full hover:animate-bounce transition-all duration-300" style={{ animationDelay: '0.2s' }}></div>
           </div>
         </div>
       </div>
@@ -186,24 +186,24 @@ export default function Dashboard() {
       {/* Animated Weather Widget Row */}
       <div className="flex justify-between items-center gap-2 mb-2 animate-fade-in">
         <div className="flex-1 flex flex-col items-center bg-white/80 rounded-xl p-2 shadow card-hover animate-float">
-          <span className="text-2xl animate-bounce">🌡️</span>
-          <span className="font-bold text-lg">{weatherData.temperature.toFixed(1)}°C</span>
-          <span className="text-xs text-slate-500">Temperature</span>
+          <span className="text-2xl hover:animate-bounce transition-all duration-300">🌡️</span>
+                      <span className="font-bold text-lg">{weatherData.temperature.toFixed(1)}°C</span>
+            <span className="text-xs text-slate-500">{t('dash.temperature')}</span>
         </div>
         <div className="flex-1 flex flex-col items-center bg-white/80 rounded-xl p-2 shadow card-hover animate-float-delay-1">
           <span className="text-2xl animate-wave">🌧️</span>
-          <span className="font-bold text-lg">{weatherData.rainfall.toFixed(1)} mm</span>
-          <span className="text-xs text-slate-500">Rainfall</span>
+                      <span className="font-bold text-lg">{weatherData.rainfall.toFixed(1)} mm</span>
+            <span className="text-xs text-slate-500">{t('dash.rainfall')}</span>
         </div>
         <div className="flex-1 flex flex-col items-center bg-white/80 rounded-xl p-2 shadow card-hover animate-float-delay-2">
           <span className="text-2xl animate-pulse">💧</span>
-          <span className="font-bold text-lg">{weatherData.humidity.toFixed(0)}%</span>
-          <span className="text-xs text-slate-500">Humidity</span>
+                      <span className="font-bold text-lg">{weatherData.humidity.toFixed(0)}%</span>
+            <span className="text-xs text-slate-500">{t('dash.humidity')}</span>
         </div>
         <div className="flex-1 flex flex-col items-center bg-white/80 rounded-xl p-2 shadow card-hover animate-float-delay-3">
-          <span className="text-2xl animate-bounce-rotate">💨</span>
-          <span className="font-bold text-lg">{weatherData.windSpeed.toFixed(1)} km/h</span>
-          <span className="text-xs text-slate-500">Wind</span>
+          <span className="text-2xl hover:animate-bounce-rotate transition-all duration-300">💨</span>
+                      <span className="font-bold text-lg">{weatherData.windSpeed.toFixed(1)} km/h</span>
+            <span className="text-xs text-slate-500">{t('dash.wind')}</span>
         </div>
       </div>
 
@@ -211,9 +211,9 @@ export default function Dashboard() {
       <div className="w-full flex items-center bg-gradient-to-r from-red-100 via-orange-100 to-yellow-100 rounded-xl px-4 py-1 mb-2 shadow animate-fade-in">
         <span className="mr-2 animate-ping text-red-500">🔴</span>
         <span className="font-semibold text-sm text-red-700 animate-slide-left">
-          {alerts.find(a => !a.isRead)?.message || 'No new alerts. All clear!'}
+          {alerts.find(a => !a.isRead)?.message || t('dash.noNewAlerts')}
         </span>
-        <span className="ml-auto text-xs text-slate-500 animate-fade-in">{alerts.find(a => !a.isRead)?.timestamp ? 'New' : 'Updated'}</span>
+        <span className="ml-auto text-xs text-slate-500 animate-fade-in">{alerts.find(a => !a.isRead)?.timestamp ? t('dash.new') : t('dash.updated')}</span>
       </div>
 
       {/* Main Dashboard Content */}
@@ -222,15 +222,15 @@ export default function Dashboard() {
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-2 shadow-lg flex-shrink-0">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-slate-800">Live Risk Monitor</h2>
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold animate-pulse">Live</span>
-            </div>
-            <p className="text-xs text-slate-600">Updates every 3 hours</p>
+                          <h2 className="text-lg font-bold text-slate-800">{t('dash.liveRiskMonitor')}</h2>
+            <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold animate-pulse">{t('dash.live')}</span>
+          </div>
+          <p className="text-xs text-slate-600">{t('dash.updatesEvery3Hours')}</p>
           </div>
           {/* City Risk Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
             {cityRisks.map((city, index) => (
-              <div key={city.name} className={`bg-white rounded-lg p-2 shadow-sm border border-slate-200 animate-bounce ${index % 2 === 0 ? 'animate-float' : 'animate-float-delay-1'}`} style={{ animationDelay: `${index * 0.1}s` }}>
+              <div key={city.name} className={`bg-white rounded-lg p-2 shadow-sm border border-slate-200 hover:animate-bounce transition-all duration-300 ${index % 2 === 0 ? 'hover:animate-float' : 'hover:animate-float-delay-1'}`} style={{ animationDelay: `${index * 0.1}s` }}>
                 <div className="flex items-center space-x-1 mb-1">
                   <span className="text-red-500 text-xs animate-pulse">{getRiskIcon(city.risk)}</span>
                   <div>
@@ -240,7 +240,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center justify-between mb-1">
                   <span className={`px-1 py-0.5 rounded-full text-xs font-semibold ${getRiskColor(city.risk)} animate-enhanced-pulse-color`}>
-                    {city.risk.charAt(0).toUpperCase() + city.risk.slice(1)}
+                    {t(`risk.${city.risk}`)}
                   </span>
                   <span className="text-xs text-slate-600">{city.percentage}%</span>
                 </div>
@@ -261,8 +261,8 @@ export default function Dashboard() {
           <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden flex flex-col">
             <div className="p-2 border-b border-slate-200 flex-shrink-0">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-slate-800">Interactive Risk Map</h3>
-                <span className="text-xs text-slate-500 animate-fade-in">Last Updated: {new Date().toLocaleTimeString()}</span>
+                <h3 className="text-base font-bold text-slate-800">{t('dash.interactiveRiskMap')}</h3>
+                <span className="text-xs text-slate-500 animate-fade-in">{t('dash.lastUpdatedTime')}: {new Date().toLocaleTimeString()}</span>
               </div>
             </div>
             <div className="flex flex-1 min-h-0 h-48">
@@ -296,24 +296,24 @@ export default function Dashboard() {
                 <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg border-2 border-dashed border-blue-300 flex items-center justify-center animate-fade-in">
                   <div className="text-center">
                     <div className="text-3xl mb-2 animate-float">🗺️</div>
-                    <h4 className="text-sm font-semibold text-slate-700 mb-1">Map Ready for ML Integration</h4>
+                    <h4 className="text-sm font-semibold text-slate-700 mb-1">{t('dash.mapReadyForML')}</h4>
                     <p className="text-xs text-slate-600 max-w-xs">
-                      This interactive map is prepared for your machine learning model integration. Connect your flood prediction model to display real-time risk data.
+                      {t('dash.mapDescription')}
                     </p>
                   </div>
                 </div>
                 {/* Map Controls */}
                 <div className="absolute top-2 right-2 flex flex-col space-y-1">
-                  <button className="w-6 h-6 bg-blue-500 text-white rounded flex items-center justify-center hover:bg-blue-600 transition-colors text-xs animate-bounce">+</button>
-                  <button className="w-6 h-6 bg-blue-500 text-white rounded flex items-center justify-center hover:bg-blue-600 transition-colors text-xs animate-bounce">-</button>
+                  <button className="w-6 h-6 bg-blue-500 text-white rounded flex items-center justify-center hover:bg-blue-600 transition-colors text-xs hover:animate-bounce transition-all duration-300">+</button>
+                  <button className="w-6 h-6 bg-blue-500 text-white rounded flex items-center justify-center hover:bg-blue-600 transition-colors text-xs hover:animate-bounce transition-all duration-300">-</button>
                   <button className="w-6 h-6 bg-blue-500 text-white rounded flex items-center justify-center hover:bg-blue-600 transition-colors text-xs animate-spin">🔄</button>
                 </div>
                 {/* Floating cloud background */}
                 <div className="absolute left-4 top-4 w-8 h-8 animate-float-delay-2 opacity-30 pointer-events-none select-none">☁️</div>
                 <div className="absolute right-8 bottom-8 w-8 h-8 animate-float-delay-3 opacity-20 pointer-events-none select-none">💧</div>
                 {/* Bottom Indicators */}
-                <div className="absolute bottom-2 left-2 text-xs text-slate-500 animate-fade-in">Time Frame: Current</div>
-                <div className="absolute bottom-2 right-2 text-xs text-slate-500 animate-fade-in">Showing: Current</div>
+                <div className="absolute bottom-2 left-2 text-xs text-slate-500 animate-fade-in">{t('dash.timeFrame')}: {t('dash.current')}</div>
+                <div className="absolute bottom-2 right-2 text-xs text-slate-500 animate-fade-in">{t('dash.showing')}: {t('dash.current')}</div>
               </div>
             </div>
           </div>
@@ -322,10 +322,10 @@ export default function Dashboard() {
           <div className="space-y-2 flex flex-col h-full">
             {/* High Risk Calendar */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-2 shadow-lg flex-1 min-h-0 animate-fade-in">
-              <h3 className="text-base font-bold text-slate-800 mb-2 flex items-center space-x-2">
-                <span>📅</span>
-                <span>High Risk Calendar</span>
-              </h3>
+                              <h3 className="text-base font-bold text-slate-800 mb-2 flex items-center space-x-2">
+                  <span>📅</span>
+                  <span>{t('dash.highRiskCalendar')}</span>
+                </h3>
               {/* Calendar Grid */}
               <div className="grid grid-cols-7 gap-1">
                 {/* Days of Week */}
@@ -350,14 +350,14 @@ export default function Dashboard() {
             </div>
             {/* Prediction Timeline */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-2 shadow-lg flex-1 min-h-0 animate-fade-in">
-              <h3 className="text-base font-bold text-slate-800 mb-2 flex items-center space-x-2">
-                <span>⏰</span>
-                <span>Prediction Timeline (3hr intervals)</span>
-              </h3>
+                              <h3 className="text-base font-bold text-slate-800 mb-2 flex items-center space-x-2">
+                  <span>⏰</span>
+                  <span>{t('dash.predictionTimeline')}</span>
+                </h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-600">Prediction Time:</span>
-                  <span className="text-xs font-semibold text-slate-800">Now</span>
+                  <span className="text-xs text-slate-600">{t('dash.predictionTime')}:</span>
+                  <span className="text-xs font-semibold text-slate-800">{t('dash.now')}</span>
                 </div>
                 {/* Timeline visualization with moving indicator */}
                 <div className="h-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg border-2 border-dashed border-blue-300 flex items-center relative overflow-hidden">
@@ -371,7 +371,7 @@ export default function Dashboard() {
                     <div className="w-4 h-4 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full shadow-lg animate-pulse border-2 border-white"></div>
                   </div>
                   <div className="w-full text-center z-10">
-                    <span className="text-xs text-slate-600">Timeline visualization</span>
+                    <span className="text-xs text-slate-600">{t('dash.timelineVisualization')}</span>
                   </div>
                 </div>
               </div>

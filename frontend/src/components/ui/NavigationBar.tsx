@@ -6,11 +6,11 @@ type Props = {
 }
 
 const Icon = ({ name, active }: { name: 'home' | 'dashboard' | 'chat' | 'alerts' | 'predictions' | 'profile' | 'settings'; active: boolean }) => {
-  const common = `w-6 h-6 ${active ? 'text-blue-600' : 'text-gray-600'} transition-all duration-200 ${active ? 'animate-bounce' : 'hover:scale-110'}`
+  const common = `w-6 h-6 ${active ? 'text-blue-600' : 'text-gray-600'} transition-all duration-200 ${active ? 'hover:animate-bounce' : 'hover:scale-110'}`
   
   if (name === 'home') return <span className={common}>🏠</span>
   if (name === 'dashboard') return <span className={common}>📊</span>
-  if (name === 'chat') return <span className={common}>💬</span>
+  if (name === 'chat') return <span className={common}>📢</span>
   if (name === 'alerts') return <span className={common}>🚨</span>
   if (name === 'predictions') return <span className={common}>🔮</span>
   if (name === 'profile') return <span className={common}>👤</span>
@@ -22,15 +22,15 @@ const Icon = ({ name, active }: { name: 'home' | 'dashboard' | 'chat' | 'alerts'
 export default function NavigationBar({ activePath }: Props) {
   const { t } = useI18n()
   
-  const items = [
-    { to: '/', key: 'home' as const, label: 'Home' },
-    { to: '/dashboard', key: 'dashboard' as const, label: 'Dashboard' },
-    { to: '/community-chat', key: 'chat' as const, label: 'Chat' },
-    { to: '/recent-alerts', key: 'alerts' as const, label: 'Alerts' },
-    { to: '/risk-predicted', key: 'predictions' as const, label: 'Predictions' },
-    { to: '/profile', key: 'profile' as const, label: 'Profile' },
-    { to: '/settings', key: 'settings' as const, label: 'Settings' }
-  ]
+     const items = [
+     { to: '/', key: 'home' as const, label: t('app.home') },
+     { to: '/dashboard', key: 'dashboard' as const, label: t('app.dashboard') },
+     { to: '/community-chat', key: 'chat' as const, label: t('app.chat') },
+     { to: '/recent-alerts', key: 'alerts' as const, label: t('app.alerts') },
+     { to: '/risk-predicted', key: 'predictions' as const, label: t('app.predictions') },
+     { to: '/profile', key: 'profile' as const, label: t('app.profile') },
+     { to: '/settings', key: 'settings' as const, label: t('app.settings') }
+   ]
   return (
     <footer className="fixed bottom-0 left-0 w-full z-50 bg-white/90 backdrop-blur-sm border-t border-gray-200 shadow-2xl rounded-t-2xl">
       <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-around">

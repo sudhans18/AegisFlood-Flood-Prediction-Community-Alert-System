@@ -1,172 +1,246 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../context/I18nContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
 
-interface ChatMessage {
+interface Announcement {
   id: string;
-  user: string;
-  message: string;
+  title: string;
+  description: string;
+  mediaType: 'image' | 'video';
+  mediaUrl: string;
+  location: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
   timestamp: string;
-  avatar: string;
-  isOnline: boolean;
+  authority: string;
+  isVerified: boolean;
 }
 
-const CommunityChat: React.FC = () => {
+const Announcements: React.FC = () => {
   const { token, role } = useAuth();
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const { t } = useI18n();
+  
+  const [announcements, setAnnouncements] = useState<Announcement[]>([
     {
       id: '1',
-      user: 'FloodGuard_Admin',
-      message: 'Welcome to the AegisFlood Community! Stay safe and stay connected. 🌊',
-      timestamp: '2 min ago',
-      avatar: '🛡️',
-      isOnline: true
+      title: 'Flood Situation in Guwahati City Center',
+      description: 'Heavy rainfall has caused severe flooding in the city center. Water levels are rising rapidly. All residents in the affected area are advised to evacuate immediately.',
+      mediaType: 'image',
+      mediaUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop',
+      location: 'Guwahati, Assam',
+      severity: 'high',
+      timestamp: '2 hours ago',
+      authority: 'Assam State Disaster Management Authority',
+      isVerified: true
     },
     {
       id: '2',
-      user: 'WeatherWatcher',
-      message: 'Heavy rainfall expected in Guwahati area. Stay alert everyone! ⚠️',
-      timestamp: '5 min ago',
-      avatar: '🌦️',
-      isOnline: true
+      title: 'River Brahmaputra Water Level Update',
+      description: 'Current water level at Pandu Ghat: 50.2 meters (above danger level). Continuous monitoring in progress.',
+      mediaType: 'video',
+      mediaUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+      location: 'Pandu Ghat, Guwahati',
+      severity: 'medium',
+      timestamp: '4 hours ago',
+      authority: 'Central Water Commission',
+      isVerified: true
     },
     {
       id: '3',
-      user: 'SafetyFirst',
-      message: 'Remember to keep emergency contacts handy. Better safe than sorry! 📞',
-      timestamp: '8 min ago',
-      avatar: '🚨',
-      isOnline: false
+      title: 'Emergency Response Team Deployment',
+      description: 'NDRF teams have been deployed to assist in rescue operations. Boats and emergency supplies are being distributed.',
+      mediaType: 'image',
+      mediaUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&h=600&fit=crop',
+      location: 'Multiple locations, Assam',
+      severity: 'critical',
+      timestamp: '6 hours ago',
+      authority: 'National Disaster Response Force',
+      isVerified: true
     },
     {
       id: '4',
-      user: 'LocalHero',
-      message: 'Community evacuation plan updated. Check your designated safe zones! 🏠',
-      timestamp: '12 min ago',
-      avatar: '🏆',
-      isOnline: true
+      title: 'Road Closure Alert - NH-37',
+      description: 'National Highway 37 is closed between Jorabat and Nagaon due to flooding. Alternative routes available.',
+      mediaType: 'image',
+      mediaUrl: 'https://images.unsplash.com/photo-1545459720-aac8509eb02c?w=800&h=600&fit=crop',
+      location: 'NH-37, Assam',
+      severity: 'medium',
+      timestamp: '8 hours ago',
+      authority: 'Assam Police Traffic Control',
+      isVerified: true
     }
-  ]);
-  const [newMessage, setNewMessage] = useState('');
-  const [onlineUsers] = useState([
-    { name: 'FloodGuard_Admin', avatar: '🛡️', status: 'online' },
-    { name: 'WeatherWatcher', avatar: '🌦️', status: 'online' },
-    { name: 'LocalHero', avatar: '🏆', status: 'online' },
-    { name: 'SafetyFirst', avatar: '🚨', status: 'offline' },
-    { name: 'EmergencyTeam', avatar: '🚑', status: 'online' }
   ]);
 
-  const sendMessage = () => {
-    if (newMessage.trim()) {
-      const message: ChatMessage = {
-        id: Date.now().toString(),
-        user: role === 'citizen' ? 'Citizen' : role === 'authority' ? 'Authority' : 'Anonymous',
-        message: newMessage,
-        timestamp: 'Just now',
-        avatar: '👤',
-        isOnline: true
-      };
-      setMessages([message, ...messages]);
-      setNewMessage('');
+  const [selectedSeverity, setSelectedSeverity] = useState<string>('all');
+  const [selectedLocation, setSelectedLocation] = useState<string>('all');
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
+
+  const getSeverityIcon = (severity: string) => {
+    switch (severity) {
+      case 'low': return '🟢';
+      case 'medium': return '🟡';
+      case 'high': return '🟠';
+      case 'critical': return '🔴';
+      default: return '⚪';
+    }
+  };
+
+  const filteredAnnouncements = announcements.filter(announcement => {
+    const severityMatch = selectedSeverity === 'all' || announcement.severity === selectedSeverity;
+    const locationMatch = selectedLocation === 'all' || announcement.location.includes(selectedLocation);
+    return severityMatch && locationMatch;
+  });
 
   return (
     <div className="h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-sm border-b border-slate-200 px-4 py-2 flex-shrink-0">
+      <div className="bg-white/90 backdrop-blur-sm border-b border-slate-200 px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center animate-bounce">
-              <span className="text-lg">💬</span>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center hover:animate-bounce transition-all duration-300">
+              <span className="text-xl">📢</span>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-800">Community Chat</h1>
-              <p className="text-xs text-gray-600">Connect with your community</p>
+              <h1 className="text-xl font-bold text-gray-800">Official Announcements</h1>
+              <p className="text-sm text-gray-600">Latest updates from authorities on flood situations</p>
             </div>
           </div>
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
-            <span className="text-xs text-gray-600">Live</span>
+            <span className="text-sm text-gray-600 font-medium">Live Updates</span>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex gap-2 min-h-0 p-2">
-        {/* Online Users */}
-        <div className="w-1/4 bg-white/80 backdrop-blur-sm rounded-xl p-2 shadow-lg flex-shrink-0 flex flex-col max-h-full">
-          <h3 className="text-base font-semibold text-gray-800 mb-2 flex items-center">
-            <span className="mr-1 animate-pulse">👥</span>
-            Online Users
-          </h3>
-          <div className="flex-1 space-y-1 overflow-hidden">
-            {onlineUsers.map((user, index) => (
-              <div key={index} className="flex items-center space-x-1 p-1 rounded-lg hover:bg-gray-50 transition-all animate-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
-                <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-xs animate-float">
-                  {user.avatar}
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-800">{user.name}</p>
-                  <div className="flex items-center space-x-1">
-                    <div className={`w-1.5 h-1.5 rounded-full ${user.status === 'online' ? 'bg-green-500 animate-ping' : 'bg-gray-400'}`}></div>
-                    <span className="text-[10px] text-gray-500">{user.status}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Filters */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200 px-4 py-2 flex-shrink-0">
+        <div className="flex space-x-3">
+          <select 
+            value={selectedSeverity} 
+            onChange={(e) => setSelectedSeverity(e.target.value)}
+            className="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="all">All Severity Levels</option>
+            <option value="low">Low Risk</option>
+            <option value="medium">Medium Risk</option>
+            <option value="high">High Risk</option>
+            <option value="critical">Critical</option>
+          </select>
+          <select 
+            value={selectedLocation} 
+            onChange={(e) => setSelectedLocation(e.target.value)}
+            className="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="all">All Locations</option>
+            <option value="Guwahati">Guwahati</option>
+            <option value="Assam">Assam</option>
+            <option value="NH-37">NH-37</option>
+          </select>
         </div>
+      </div>
 
-        {/* Chat Messages */}
-        <div className="flex-1 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg flex flex-col max-h-full min-h-0">
-          {/* Messages Area */}
-          <div className="flex-1 px-2 py-1 space-y-2 min-h-0 max-h-[calc(100vh-180px)] overflow-hidden">
-            {messages.slice(0, 10).map((message, index) => {
-              const isCurrentUser = message.user === (role === 'citizen' ? 'Citizen' : role === 'authority' ? 'Authority' : 'Anonymous');
-              return (
-                <div key={message.id} className={`flex space-x-2 animate-slide-up ${isCurrentUser ? 'flex-row-reverse space-x-reverse' : ''}`} style={{ animationDelay: `${index * 0.1}s` }}>
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-base animate-float">
-                    {message.avatar}
-                  </div>
-                  <div className={`flex-1 max-w-xs ${isCurrentUser ? 'text-right' : ''}`}>
-                    <div className={`inline-block p-2 rounded-lg ${isCurrentUser ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white' : 'bg-gray-100 text-gray-800'}`}>
-                      <p className="text-xs font-medium mb-0.5">{message.user}</p>
-                      <p className="text-xs">{message.message}</p>
-                    </div>
-                    <p className="text-[10px] text-gray-500 mt-0.5">{message.timestamp}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      {/* Announcements Feed */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {filteredAnnouncements.map((announcement, index) => (
+          <Card key={announcement.id} className="p-4 bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 animate-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
+            {/* Header */}
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${getSeverityColor(announcement.severity)}`}>
+                  {getSeverityIcon(announcement.severity)} {announcement.severity.toUpperCase()}
+                </span>
+                {announcement.isVerified && (
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold border border-blue-200">
+                    ✅ Verified
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-gray-500">{announcement.timestamp}</span>
+            </div>
 
-          {/* Message Input */}
-          <div className="p-2 border-t border-gray-200 flex-shrink-0">
-            <div className="flex space-x-2">
-              <Input
-                placeholder="Type your message..."
-                value={newMessage}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
-                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && sendMessage()}
-                className="flex-1 p-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm"
-              />
-              <Button
-                onClick={sendMessage}
-                disabled={!newMessage.trim()}
-                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 animate-pulse text-sm"
-              >
-                <span className="mr-1">📤</span>
-                Send
+            {/* Title and Authority */}
+            <h3 className="text-lg font-bold text-gray-800 mb-2">{announcement.title}</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              <span className="font-semibold">Authority:</span> {announcement.authority}
+            </p>
+
+            {/* Media */}
+            <div className="mb-3">
+              {announcement.mediaType === 'image' ? (
+                <img 
+                  src={announcement.mediaUrl} 
+                  alt={announcement.title}
+                  className="w-full h-48 object-cover rounded-lg shadow-md"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://via.placeholder.com/800x400/4F46E5/FFFFFF?text=Flood+Image';
+                  }}
+                />
+              ) : (
+                <video 
+                  src={announcement.mediaUrl} 
+                  controls
+                  className="w-full h-48 object-cover rounded-lg shadow-md"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4';
+                  }}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              )}
+            </div>
+
+            {/* Description */}
+            <p className="text-gray-700 mb-3 leading-relaxed">{announcement.description}</p>
+
+            {/* Location */}
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <span>📍</span>
+              <span className="font-medium">{announcement.location}</span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-2 mt-4">
+              <Button className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm py-2">
+                📍 View on Map
+              </Button>
+              <Button className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm py-2">
+                📞 Emergency Contact
               </Button>
             </div>
+          </Card>
+        ))}
+
+        {filteredAnnouncements.length === 0 && (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">📭</span>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">No announcements found</h3>
+            <p className="text-gray-500">Try adjusting your filters or check back later for updates.</p>
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Authority Post Button (only for authority users) */}
+      {role === 'authority' && (
+        <div className="bg-white/90 backdrop-blur-sm border-t border-slate-200 px-4 py-3 flex-shrink-0">
+          <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold py-3">
+            📢 Post New Announcement
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
 
-export default CommunityChat;
+export default Announcements;

@@ -126,7 +126,7 @@ export default function Registration() {
         return (
           <div className="space-y-6 animate-slide-up">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg animate-bounce">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg hover:animate-bounce transition-all duration-300">
                 <span className="text-3xl">📍</span>
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Choose Location</h2>
@@ -156,7 +156,7 @@ export default function Registration() {
         return (
           <div className="space-y-6 animate-slide-up">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg animate-bounce">
+              <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg hover:animate-bounce transition-all duration-300">
                 <span className="text-3xl">📱</span>
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Phone Verification</h2>
@@ -222,7 +222,7 @@ export default function Registration() {
         return (
           <div className="space-y-6 animate-slide-up">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg animate-bounce">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg hover:animate-bounce transition-all duration-300">
                 <span className="text-3xl">🌐</span>
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Choose Language</h2>
@@ -268,7 +268,7 @@ export default function Registration() {
           <div className="flex flex-col flex-1 min-h-0 animate-slide-up">
             <div className="flex-1 min-h-0 space-y-6 overflow-y-auto pr-1">
               <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg animate-bounce">
+                <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg hover:animate-bounce transition-all duration-300">
                   <span className="text-3xl">🔔</span>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('reg.alertPrefs')}</h2>
@@ -446,16 +446,6 @@ export default function Registration() {
             )}
           </div>
         </Card>
-        {/* Bottom Feature Highlight */}
-        <div className="mt-4 text-center animate-slide-up" style={{animationDelay: '0.6s'}}>
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
-            <h3 className="text-base font-semibold text-gray-800 mb-1">🌟 Why Join AegisFlood?</h3>
-            <p className="text-gray-600 text-xs">
-              Get real-time flood alerts, weather updates, and community safety information. 
-              Stay informed, stay safe! 🛡️
-            </p>
-          </div>
-        </div>
       </div>
       {otpSent && currentStep === 2 && renderOtpModal()}
     </div>
