@@ -546,6 +546,10 @@
   animation: glow 2s ease-in-out infinite;
 }
 
+.shadow-glow {
+  box-shadow: 0 0 0 2px #38bdf8, 0 0 12px 2px #0ea5e9;
+}
+
 
 
 
