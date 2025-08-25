@@ -5,6 +5,7 @@ frontend/dist/
 
 # Python
 .venv/
+venv311/
 __pycache__/
 *.pyc
 *.pyo
