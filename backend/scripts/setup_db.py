@@ -1,8 +1,11 @@
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
-from backend.app.database import engine, Base
-from backend.app.models import User, Region, FloodPrediction, AlertHistory # Explicitly import all models
+from app.database import engine, Base
+from app.models import User, Region, FloodPrediction, AlertHistory, Alert
 
 
 def ensure_postgis():

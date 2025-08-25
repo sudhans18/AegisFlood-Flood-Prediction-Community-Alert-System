@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta
 from typing import Optional
+from dotenv import load_dotenv
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -11,12 +12,16 @@ from .database import get_db
 from .models import User
 from .schemas import RegisterRequest, VerifyRequest, TokenResponse, AdminLoginRequest
 
+# Load environment variables
+load_dotenv()
 
 router = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 JWT_SECRET = os.getenv("JWT_SECRET", "change_me")
+if JWT_SECRET == "change_me":
+    raise ValueError("JWT_SECRET must be set in environment variables for security")
 JWT_ALG = "HS256"
 JWT_EXPIRE_HOURS = int(os.getenv("JWT_EXPIRE_HOURS", "24"))
 
